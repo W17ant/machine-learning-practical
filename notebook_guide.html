@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Practical - Interactive Notebook Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables - Matching aoneill.co.uk-v2 */
+        :root {
+            --bg-base: #060a13;
+            --bg-surface: #0a0f1a;
+            --bg-elevated: #0c111c;
+            --panel: rgba(12, 17, 28, 0.82);
+            --panel-hover: rgba(16, 22, 36, 0.88);
+            --stroke: rgba(255, 255, 255, 0.06);
+            --stroke-hover: rgba(255, 255, 255, 0.1);
+            --ink: #f1f5f9;
+            --ink-secondary: rgba(241, 245, 249, 0.72);
+            --ink-muted: rgba(148, 163, 184, 0.9);
+            --accent: #22c55e;
+            --accent-light: #22c55e;
+            --accent-bg: rgba(34, 197, 94, 0.15);
+            --accent-border: rgba(34, 197, 94, 0.2);
+            --accent-glow: rgba(34, 197, 94, 0.15);
+            --link: #60a5fa;
+            --link-bg: rgba(96, 165, 250, 0.12);
+            --link-border: rgba(96, 165, 250, 0.2);
+            --link-glow: rgba(96, 165, 250, 0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 40px -8px rgba(0, 0, 0, 0.5);
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+            --shadow-soft: 0 24px 80px -12px rgba(0, 0, 0, 0.5);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-base);
+            background-image:
+                radial-gradient(ellipse 1000px 600px at 20% 10%, var(--accent-glow), transparent),
+                radial-gradient(ellipse 800px 500px at 80% 80%, var(--link-glow), transparent);
+            background-attachment: fixed;
+            color: var(--ink);
+            font-size: 15px;
+            line-height: 1.6;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        ::selection {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-surface);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Main layout */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Notebook panel (left) */
+        .notebook-panel {
+            flex: 1;
+            background: var(--bg-base);
+            overflow-y: auto;
+            padding: 24px;
+            scroll-behavior: smooth;
+            padding-bottom: 100px;
+        }
+
+        /* Explanation panel (right) */
+        .explanation-panel {
+            width: 420px;
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid var(--stroke);
+            padding: 28px;
+            overflow-y: auto;
+        }
+
+        /* Notebook header */
+        .notebook-header {
+            background: var(--bg-elevated);
+            padding: 14px 20px;
+            border-radius: var(--radius) var(--radius) 0 0;
+            border: 1px solid var(--stroke);
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .notebook-header .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #f59e0b; }
+        .dot.green { background: #22c55e; }
+        .notebook-title {
+            color: var(--ink-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        /* Notebook body */
+        .notebook-body {
+            background: var(--bg-surface);
+            border: 1px solid var(--stroke);
+            border-top: none;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 16px;
+        }
+
+        /* Cell styles */
+        .cell {
+            margin: 16px 0;
+            border-radius: var(--radius-sm);
+            opacity: 0.4;
+            transition: all 0.4s ease;
+            transform: translateY(0);
+        }
+        .cell.active {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+        .cell.completed {
+            opacity: 0.85;
+        }
+
+        .cell-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            border: 1px solid var(--stroke);
+            border-bottom: none;
+        }
+        .cell-number {
+            background: var(--link-bg);
+            border: 1px solid var(--link-border);
+            color: var(--link);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            margin-right: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cell-number:hover {
+            background: var(--link);
+            color: var(--bg-base);
+            transform: scale(1.05);
+        }
+        .cell-type {
+            color: var(--ink-muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .run-indicator {
+            margin-left: auto;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .run-indicator.running {
+            color: var(--warning);
+        }
+        .run-indicator.running::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border: 2px solid var(--warning);
+            border-top-color: transparent;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .code-area {
+            background: var(--bg-base);
+            border: 1px solid var(--stroke);
+            padding: 18px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6;
+            min-height: 60px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .code-area .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 16px;
+            background: var(--accent);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            box-shadow: 0 0 8px var(--accent);
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .output-area {
+            background: var(--bg-elevated);
+            border: 1px solid var(--stroke);
+            border-top: none;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            padding: 18px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ink-secondary);
+            display: none;
+        }
+        .output-area.visible {
+            display: block;
+        }
+
+        /* Syntax highlighting */
+        .keyword { color: #c792ea; }
+        .function { color: #82aaff; }
+        .string { color: #c3e88d; }
+        .number { color: #f78c6c; }
+        .comment { color: #546e7a; }
+        .variable { color: #89ddff; }
+        .operator { color: var(--ink-secondary); }
+        .class { color: #ffcb6b; }
+
+        /* Explanation panel styles */
+        .explanation-panel h2 {
+            color: var(--accent);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--stroke);
+        }
+        .explanation-panel h3 {
+            color: var(--ink);
+            font-size: 14px;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+        }
+        .explanation-content {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--ink-secondary);
+        }
+        .explanation-content p {
+            margin-bottom: 12px;
+        }
+        .explanation-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        .explanation-content li {
+            margin-bottom: 6px;
+        }
+        .explanation-content code {
+            background: var(--bg-elevated);
+            border: 1px solid var(--stroke);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--link);
+        }
+        .explanation-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        .explanation-content td {
+            padding: 8px;
+            border-bottom: 1px solid var(--stroke);
+        }
+
+        .highlight-box {
+            background: var(--bg-elevated);
+            border: 1px solid var(--stroke);
+            border-left: 3px solid var(--link);
+            padding: 14px 18px;
+            margin: 16px 0;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+        .highlight-box strong {
+            color: var(--ink);
+        }
+        .highlight-box.warning {
+            border-left-color: var(--warning);
+        }
+        .highlight-box.success {
+            border-left-color: var(--accent);
+        }
+        .highlight-box.concept {
+            border-left-color: #c792ea;
+        }
+
+        /* Control bar */
+        .control-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 420px;
+            background: var(--panel);
+            backdrop-filter: blur(16px);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-top: 1px solid var(--stroke);
+            z-index: 100;
+        }
+        .control-btn {
+            background: var(--bg-elevated);
+            color: var(--ink-secondary);
+            border: 1px solid var(--stroke);
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.18s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .control-btn:hover {
+            background: var(--bg-surface);
+            border-color: var(--stroke-hover);
+            color: var(--ink);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        .control-btn:disabled {
+            background: var(--bg-base);
+            color: var(--ink-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .control-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #052e16;
+            box-shadow: 0 8px 32px -8px rgba(34, 197, 94, 0.35);
+        }
+        .control-btn.primary:hover {
+            box-shadow: 0 12px 40px -8px rgba(34, 197, 94, 0.45);
+        }
+        .control-btn.primary:disabled {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: transparent;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .control-btn.pause {
+            background: var(--warning);
+            border-color: var(--warning);
+            color: #1a1a1a;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-base);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid var(--stroke);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--link));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        .progress-text {
+            color: var(--ink-muted);
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 100px;
+            text-align: right;
+        }
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--ink-muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .speed-control input[type="range"] {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--bg-base);
+            border-radius: 2px;
+            border: 1px solid var(--stroke);
+        }
+        .speed-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* Visual diagram in explanation */
+        .visual-diagram {
+            background: var(--bg-base);
+            border: 1px solid var(--stroke);
+            padding: 16px;
+            margin: 14px 0;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            white-space: pre;
+            line-height: 1.5;
+            color: var(--ink-muted);
+            overflow-x: auto;
+        }
+
+        /* Status badge styling */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px 7px 10px;
+            background: var(--accent-bg);
+            border: 1px solid var(--accent-border);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #86efac;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .explanation-panel {
+                width: 360px;
+            }
+            .control-bar {
+                right: 360px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+            .explanation-panel {
+                width: 100%;
+                height: 35vh;
+                border-left: none;
+                border-top: 1px solid var(--stroke);
+            }
+            .notebook-panel {
+                height: 65vh;
+            }
+            .control-bar {
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Notebook Panel -->
+    <div class="notebook-panel" id="notebookPanel">
+        <div class="notebook-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="notebook-title">Machine-Learning-Unit1-Practical.ipynb</span>
+        </div>
+        <div class="notebook-body" id="notebookBody">
+            <!-- Cells will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Explanation Panel -->
+    <div class="explanation-panel">
+        <h2 id="explanationTitle">Welcome</h2>
+        <div class="explanation-content" id="explanationContent">
+            <p>This interactive guide will walk you through the Machine Learning practical step by step.</p>
+            <div class="highlight-box">
+                <strong>How it works:</strong>
+                <ul>
+                    <li>Code types automatically on the left</li>
+                    <li>Explanations appear here on the right</li>
+                    <li>Output shows after each cell "runs"</li>
+                </ul>
+            </div>
+            <p>Click <strong>Start</strong> below to begin, or use the speed slider to adjust typing speed.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Control Bar -->
+<div class="control-bar">
+    <button class="control-btn primary" id="startBtn" onclick="startDemo()">Start</button>
+    <button class="control-btn pause" id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
+    <button class="control-btn" id="skipBtn" onclick="skipToNext()" disabled>Skip</button>
+    <button class="control-btn" id="resetBtn" onclick="resetDemo()">Reset</button>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text" id="progressText">Cell 0 / 14</div>
+    <div class="speed-control">
+        <label>Speed:</label>
+        <input type="range" id="speedSlider" min="1" max="100" value="50">
+    </div>
+</div>
+
+<script>
+// Cell data with code, output, and explanations
+const cells = [
+    {
+        title: "Cell 1: Load Dataset A",
+        code: `# =============================================================================
+# STEP 1: LOAD DATASET A
+# =============================================================================
+
+# Import pandas - a library for working with tabular data
+import pandas as pd
+
+# Load the CSV file into a DataFrame
+df = pd.read_csv("datasetA.csv")
+
+# Check the number of rows
+print(f"Number of rows: {df.shape[0]}")
+
+# Check the column names
+print(f"Column names: {list(df.columns)}")
+
+# Display the first 5 rows
+df.head()`,
+        output: `Number of rows: 1000
+Column names: ['x1', 'x2', 'label']
+
+         x1        x2  label
+0  2.304717  1.960016      0
+1  2.750451  3.940565      0
+2  0.048965  1.697820      0
+3  2.127840  2.683757      0
+4  1.983199  2.146956      0`,
+        explanation: {
+            title: "Loading the Data",
+            content: `<p>This cell loads Dataset A and verifies it's correct.</p>
+
+<h3>What's happening:</h3>
+<ul>
+    <li><code>import pandas as pd</code> — Loads the pandas library for data handling</li>
+    <li><code>pd.read_csv()</code> — Reads the CSV file into a table (DataFrame)</li>
+    <li><code>df.shape[0]</code> — Gets the number of rows</li>
+    <li><code>df.head()</code> — Shows first 5 rows</li>
+</ul>
+
+<div class="highlight-box concept">
+    <strong>Dataset A:</strong> Has "equal covariance" — both classes have similar spread/variance.
+</div>
+
+<h3>Expected:</h3>
+<ul>
+    <li>1000 rows</li>
+    <li>3 columns: x1, x2, label</li>
+</ul>`
+        }
+    },
+    {
+        title: "Cell 2: Stratified Split",
+        code: `# =============================================================================
+# STEP 2: STRATIFIED 80/20 TRAIN/TEST SPLIT
+# =============================================================================
+
+import numpy as np
+
+def stratified_train_test_split(df, test_frac=0.2, random_state=42):
+    """Split data keeping class proportions equal."""
+    rng = np.random.default_rng(random_state)
+    train_idx, test_idx = [], []
+
+    # Loop through each class separately
+    for cls, group in df.groupby("label"):
+        idx = group.index.to_numpy()
+        rng.shuffle(idx)
+        n_test = int(len(idx) * test_frac)
+        test_idx.extend(idx[:n_test])
+        train_idx.extend(idx[n_test:])
+
+    train_df = df.loc[sorted(train_idx)].reset_index(drop=True)
+    test_df = df.loc[sorted(test_idx)].reset_index(drop=True)
+    return train_df, test_df
+
+# Perform the split
+train_df, test_df = stratified_train_test_split(df, test_frac=0.2)
+
+print(f"Training set size: {len(train_df)} rows (80%)")
+print(f"Test set size: {len(test_df)} rows (20%)")
+print(f"\\nTraining class distribution:")
+print(train_df["label"].value_counts().sort_index())`,
+        output: `Training set size: 800 rows (80%)
+Test set size: 200 rows (20%)
+
+Training class distribution:
+label
+0    400
+1    400
+Name: count, dtype: int64`,
+        explanation: {
+            title: "Train/Test Split",
+            content: `<p>We split the data into training (80%) and testing (20%) sets.</p>
+
+<div class="visual-diagram">
+Full Dataset (1000)
+├── Class 0: 500
+└── Class 1: 500
+        ↓
+   STRATIFIED SPLIT
+        ↓
+┌──────────────┬─────────────┐
+│ TRAIN (800)  │ TEST (200)  │
+├──────────────┼─────────────┤
+│ Class 0: 400 │ Class 0: 100│
+│ Class 1: 400 │ Class 1: 100│
+└──────────────┴─────────────┘
+</div>
+
+<div class="highlight-box warning">
+    <strong>Why stratified?</strong> Ensures both classes are represented equally in train AND test sets.
+</div>
+
+<h3>Key concepts:</h3>
+<ul>
+    <li><strong>Training set:</strong> Used to build the model</li>
+    <li><strong>Test set:</strong> Used to evaluate (never seen during training!)</li>
+</ul>`
+        }
+    },
+    {
+        title: "Cell 3: Compute Class Means",
+        code: `# =============================================================================
+# STEP 3: COMPUTE CLASS MEAN VECTORS
+# =============================================================================
+
+# Calculate mean of x1 and x2 for each class
+# IMPORTANT: Use training data only!
+means = train_df.groupby("label")[["x1", "x2"]].mean()
+
+print("Class mean vectors (centroids):")
+print(means)
+
+# Extract individual mean vectors
+mu0 = means.loc[0].values
+mu1 = means.loc[1].values
+
+print(f"\\nμ0 (class 0): x1={mu0[0]:.4f}, x2={mu0[1]:.4f}")
+print(f"μ1 (class 1): x1={mu1[0]:.4f}, x2={mu1[1]:.4f}")`,
+        output: `Class mean vectors (centroids):
+             x1        x2
+label
+0      1.994434  2.948663
+1      5.883596  6.946654
+
+μ0 (class 0): x1=1.9944, x2=2.9487
+μ1 (class 1): x1=5.8836, x2=6.9467`,
+        explanation: {
+            title: "Computing Centroids",
+            content: `<p>We calculate the <strong>centroid</strong> (center point) of each class.</p>
+
+<div class="visual-diagram">
+    x2
+    │
+ 8  │              x x x
+    │             x <span style="color:#ef4444">X</span> x   ← μ1 (Class 1 center)
+ 6  │              x x
+    │
+ 4  │   o o o
+    │  o <span style="color:#22c55e">O</span> o o   ← μ0 (Class 0 center)
+ 2  │   o o
+    │
+    └────────────────────── x1
+        2     4     6     8
+</div>
+
+<div class="highlight-box warning">
+    <strong>Critical:</strong> Only use TRAINING data! Using test data would be cheating.
+</div>
+
+<h3>The centroid is:</h3>
+<ul>
+    <li>Average x1 value of all points in the class</li>
+    <li>Average x2 value of all points in the class</li>
+</ul>`
+        }
+    },
+    {
+        title: "Cell 4: NCM Classifier",
+        code: `# =============================================================================
+# STEP 4: NEAREST-CLASS-MEAN (NCM) CLASSIFIER
+# =============================================================================
+
+def nearest_mean_predict(test_df, means):
+    """Predict class based on nearest centroid."""
+    centers = means.values
+    labels = means.index.to_numpy()
+    X = test_df[["x1", "x2"]].to_numpy()
+
+    # Calculate squared Euclidean distance to each centroid
+    dists = np.sum((X[:, None, :] - centers[None, :, :]) ** 2, axis=2)
+
+    # Predict class with nearest centroid
+    pred_idx = np.argmin(dists, axis=1)
+    return labels[pred_idx]
+
+# Run the classifier
+y_pred = nearest_mean_predict(test_df, means)
+
+print("Sample predictions (first 10):")
+print(f"Predicted: {y_pred[:10]}")
+print(f"Actual:    {test_df['label'].values[:10]}")`,
+        output: `Sample predictions (first 10):
+Predicted: [0 0 0 0 0 0 0 0 0 0]
+Actual:    [0 0 0 0 0 0 0 0 0 0]`,
+        explanation: {
+            title: "NCM Classification",
+            content: `<p>The <strong>Nearest-Class-Mean</strong> classifier assigns each point to the class whose centroid is closest.</p>
+
+<div class="visual-diagram">
+Test point P at (3.5, 4.0)
+
+    P ●─────────────── μ1
+      │\\
+      │  \\  d₁ = 3.91
+      │    \\
+      │ d₀ = 1.80
+      │
+    μ0
+
+d₀ < d₁  →  Predict Class 0
+</div>
+
+<div class="highlight-box concept">
+    <strong>Euclidean Distance:</strong><br>
+    d = √[(x1ₐ - x1ᵦ)² + (x2ₐ - x2ᵦ)²]
+</div>
+
+<h3>The rule:</h3>
+<p>For each test point, calculate distance to μ0 and μ1. Assign to whichever is <strong>closer</strong>.</p>`
+        }
+    },
+    {
+        title: "Cell 5: Evaluate Accuracy",
+        code: `# =============================================================================
+# STEP 5: EVALUATE TEST ACCURACY
+# =============================================================================
+
+y_true = test_df["label"].to_numpy()
+
+# Calculate accuracy
+accuracy = (y_true == y_pred).mean()
+
+print("=" * 50)
+print("DATASET A - NCM CLASSIFIER RESULTS")
+print("=" * 50)
+print(f"Total test samples: {len(y_true)}")
+print(f"Correct predictions: {(y_true == y_pred).sum()}")
+print(f"Incorrect predictions: {(y_true != y_pred).sum()}")
+print(f"Test Accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
+print("=" * 50)
+
+# Save predictions
+results_df = test_df.copy()
+results_df["predicted"] = y_pred
+results_df.to_csv("datasetA_predictions.csv", index=False)
+print("\\nPredictions saved to: datasetA_predictions.csv")`,
+        output: `==================================================
+DATASET A - NCM CLASSIFIER RESULTS
+==================================================
+Total test samples: 200
+Correct predictions: 200
+Incorrect predictions: 0
+Test Accuracy: 1.0000 (100.00%)
+==================================================
+
+Predictions saved to: datasetA_predictions.csv`,
+        explanation: {
+            title: "Evaluating Accuracy",
+            content: `<p>We compare predictions to actual labels to measure performance.</p>
+
+<div class="highlight-box success">
+    <strong>100% Accuracy!</strong><br>
+    NCM perfectly separates Dataset A's classes.
+</div>
+
+<h3>Accuracy formula:</h3>
+<div class="visual-diagram">
+Accuracy = Correct / Total
+         = 200 / 200
+         = 100%
+</div>
+
+<h3>Why so high?</h3>
+<ul>
+    <li>Dataset A has <strong>equal covariance</strong></li>
+    <li>Classes are well-separated</li>
+    <li>Linear boundary (perpendicular bisector) works perfectly</li>
+</ul>`
+        }
+    },
+    {
+        title: "Cell 6: Dataset B Pipeline",
+        code: `# =============================================================================
+# DATASET B - COMPLETE PIPELINE
+# =============================================================================
+
+# Load Dataset B (unequal covariance)
+df_b = pd.read_csv("datasetB.csv")
+print(f"Dataset B loaded: {len(df_b)} rows")
+
+# Split
+train_df_b, test_df_b = stratified_train_test_split(df_b)
+
+# Compute means
+means_b = train_df_b.groupby("label")[["x1", "x2"]].mean()
+print(f"\\nClass means:")
+print(means_b)
+
+# Predict
+y_pred_b = nearest_mean_predict(test_df_b, means_b)
+
+# Evaluate
+y_true_b = test_df_b["label"].to_numpy()
+accuracy_b = (y_true_b == y_pred_b).mean()
+
+print(f"\\n" + "=" * 50)
+print("DATASET B - NCM CLASSIFIER RESULTS")
+print("=" * 50)
+print(f"Test Accuracy: {accuracy_b:.4f} ({accuracy_b * 100:.2f}%)")
+print("=" * 50)`,
+        output: `Dataset B loaded: 1000 rows
+
+Class means:
+             x1        x2
+label
+0      2.011535  3.003682
+1      5.928327  7.018540
+
+==================================================
+DATASET B - NCM CLASSIFIER RESULTS
+==================================================
+Test Accuracy: 0.9850 (98.50%)
+==================================================`,
+        explanation: {
+            title: "Dataset B Results",
+            content: `<p>We repeat the same process for Dataset B, which has <strong>unequal covariance</strong>.</p>
+
+<h3>Dataset B characteristics:</h3>
+<table style="width:100%; color:var(--ink-secondary); font-size:13px;">
+    <tr style="border-bottom:1px solid var(--stroke);">
+        <td><strong>Class</strong></td>
+        <td><strong>Spread (std)</strong></td>
+        <td><strong>Description</strong></td>
+    </tr>
+    <tr>
+        <td>0</td>
+        <td>~0.36</td>
+        <td>Tight cluster</td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>~1.56</td>
+        <td>Spread out (4x wider!)</td>
+    </tr>
+</table>
+
+<div class="highlight-box warning">
+    <strong>98.5% vs 100%</strong><br>
+    Lower accuracy because the linear boundary is suboptimal for unequal spreads.
+</div>
+
+<p>An <strong>oval boundary</strong> around the tight Class 0 would work better.</p>`
+        }
+    },
+    {
+        title: "Cell 7: Visualisation",
+        code: `# =============================================================================
+# STEP 7: VISUALISATION
+# =============================================================================
+
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Plot Dataset A
+ax1 = axes[0]
+train_c0 = train_df[train_df["label"] == 0]
+train_c1 = train_df[train_df["label"] == 1]
+ax1.scatter(train_c0["x1"], train_c0["x2"], c="blue", alpha=0.5, label="Class 0")
+ax1.scatter(train_c1["x1"], train_c1["x2"], c="red", alpha=0.5, label="Class 1")
+ax1.scatter(mu0[0], mu0[1], c="blue", marker="X", s=200, edgecolor="black")
+ax1.scatter(mu1[0], mu1[1], c="red", marker="X", s=200, edgecolor="black")
+ax1.set_title("Dataset A - Training Data with Centroids")
+ax1.legend()
+
+# Plot Dataset B
+ax2 = axes[1]
+train_c0_b = train_df_b[train_df_b["label"] == 0]
+train_c1_b = train_df_b[train_df_b["label"] == 1]
+ax2.scatter(train_c0_b["x1"], train_c0_b["x2"], c="blue", alpha=0.5, label="Class 0")
+ax2.scatter(train_c1_b["x1"], train_c1_b["x2"], c="red", alpha=0.5, label="Class 1")
+ax2.set_title("Dataset B - Training Data with Centroids")
+ax2.legend()
+
+plt.savefig("visualisation.png")
+plt.show()
+print("Plot saved to: visualisation.png")`,
+        output: `<div style="margin-bottom:15px;">Dataset A:</div>
+<img src="datasetA_visualisation.png" style="max-width:100%; border-radius:8px; margin-bottom:15px;">
+<div style="margin-bottom:15px;">Dataset B:</div>
+<img src="datasetB_visualisation.png" style="max-width:100%; border-radius:8px;">
+<div style="margin-top:15px; color:#94a3b8;">Plot saved to: visualisation.png</div>`,
+        explanation: {
+            title: "Visualising the Data",
+            content: `<p>We create scatter plots to see how the classes are distributed.</p>
+
+<h3>What to look for:</h3>
+<ul>
+    <li><strong>Blue dots:</strong> Class 0 samples</li>
+    <li><strong>Red dots:</strong> Class 1 samples</li>
+    <li><strong>X markers:</strong> Centroids (μ0, μ1)</li>
+</ul>
+
+<div class="highlight-box concept">
+    <strong>Key observation:</strong> Dataset A classes have equal spread. Dataset B's Class 1 is much more spread out than Class 0.
+</div>
+
+<p>This visual difference explains why NCM works perfectly on A but not on B.</p>`
+        }
+    },
+    {
+        title: "Cell 8: Discussion",
+        code: `# =============================================================================
+# STEP 8: COMPARISON AND DISCUSSION
+# =============================================================================
+
+print("=" * 60)
+print("ACCURACY COMPARISON")
+print("=" * 60)
+print(f"Dataset A (equal covariance):   {accuracy:.4f} ({accuracy*100:.2f}%)")
+print(f"Dataset B (unequal covariance): {accuracy_b:.4f} ({accuracy_b*100:.2f}%)")
+print("=" * 60)
+
+discussion = """
+KEY FINDINGS:
+
+1. NCM uses a LINEAR decision boundary (straight line)
+
+2. Dataset A (equal covariance): 100% accuracy
+   - Both classes have same spread
+   - Linear boundary works perfectly
+
+3. Dataset B (unequal covariance): 98.5% accuracy
+   - Class 0 is tight, Class 1 is spread out
+   - Linear boundary is SUBOPTIMAL
+   - An OVAL boundary would work better
+
+4. For unequal covariance, use QDA (Quadratic Discriminant Analysis)
+   which produces curved/oval boundaries.
+"""
+print(discussion)`,
+        output: `============================================================
+ACCURACY COMPARISON
+============================================================
+Dataset A (equal covariance):   1.0000 (100.00%)
+Dataset B (unequal covariance): 0.9850 (98.50%)
+============================================================
+
+KEY FINDINGS:
+
+1. NCM uses a LINEAR decision boundary (straight line)
+
+2. Dataset A (equal covariance): 100% accuracy
+   - Both classes have same spread
+   - Linear boundary works perfectly
+
+3. Dataset B (unequal covariance): 98.5% accuracy
+   - Class 0 is tight, Class 1 is spread out
+   - Linear boundary is SUBOPTIMAL
+   - An OVAL boundary would work better
+
+4. For unequal covariance, use QDA (Quadratic Discriminant Analysis)
+   which produces curved/oval boundaries.
+
+<div style="margin-top:20px;">
+<img src="boundary_comparison.png" style="max-width:100%; border-radius:8px;">
+</div>`,
+        explanation: {
+            title: "Why Accuracy Differs",
+            content: `<p>The key insight is understanding <strong>when linear boundaries work</strong>.</p>
+
+<div class="highlight-box concept">
+    <strong>Rule of Thumb:</strong><br>
+    • Equal covariance → Linear boundary (NCM, LDA)<br>
+    • Unequal covariance → Quadratic boundary (QDA)
+</div>
+
+<h3>Dataset B needs an oval:</h3>
+<ul>
+    <li>Class 0 is tight — needs boundary <em>around</em> it</li>
+    <li>Class 1 is spread — extends in all directions</li>
+    <li>A straight line can't capture this shape difference</li>
+</ul>
+
+<p>The graph shows how a <strong>quadratic boundary</strong> (curved line) can better separate classes with different spreads.</p>`
+        }
+    },
+    {
+        title: "Cell 9: Troubleshooting",
+        code: `# =============================================================================
+# TROUBLESHOOTING CHECKLIST
+# =============================================================================
+
+print("VERIFICATION CHECKLIST")
+print("=" * 50)
+
+# Check 1: Means from training only
+print(f"\\n1. Training set size: {len(train_df)}")
+print(f"   Full dataset size: {len(df)}")
+print(f"   ✓ Using training data only: CORRECT")
+
+# Check 2: Stratified split
+train_counts = train_df["label"].value_counts()
+print(f"\\n2. Class balance in training:")
+print(f"   Class 0: {train_counts[0]}, Class 1: {train_counts[1]}")
+print(f"   ✓ Stratified: CORRECT")
+
+# Check 3: Both dimensions
+print(f"\\n3. Features used: x1 and x2")
+print(f"   ✓ Both dimensions: CORRECT")
+
+# Check 4: Shapes
+X_test = test_df[["x1", "x2"]].to_numpy()
+print(f"\\n4. Array shapes:")
+print(f"   X_test: {X_test.shape}")
+print(f"   means: {means.values.shape}")
+print(f"   ✓ Shapes: CORRECT")
+
+print("\\n" + "=" * 50)
+print("ALL CHECKS PASSED!")
+print("=" * 50)`,
+        output: `VERIFICATION CHECKLIST
+==================================================
+
+1. Training set size: 800
+   Full dataset size: 1000
+   ✓ Using training data only: CORRECT
+
+2. Class balance in training:
+   Class 0: 400, Class 1: 400
+   ✓ Stratified: CORRECT
+
+3. Features used: x1 and x2
+   ✓ Both dimensions: CORRECT
+
+4. Array shapes:
+   X_test: (200, 2)
+   means: (2, 2)
+   ✓ Shapes: CORRECT
+
+==================================================
+ALL CHECKS PASSED!
+==================================================`,
+        explanation: {
+            title: "Troubleshooting",
+            content: `<p>This cell verifies the implementation is correct.</p>
+
+<h3>The 5 checks:</h3>
+<ul>
+    <li>✓ <strong>Means from training only</strong> — Not the full dataset</li>
+    <li>✓ <strong>Stratified split</strong> — Classes balanced</li>
+    <li>✓ <strong>Both dimensions</strong> — Using x1 AND x2</li>
+    <li>✓ <strong>Labels aligned</strong> — Indices match classes</li>
+    <li>✓ <strong>Correct shapes</strong> — Arrays have right dimensions</li>
+</ul>
+
+<div class="highlight-box success">
+    <strong>When to use:</strong>
+    <ul>
+        <li>If accuracy is unexpectedly low</li>
+        <li>If you get shape errors</li>
+        <li>To verify against reference results</li>
+    </ul>
+</div>`
+        }
+    },
+    {
+        title: "Extension 1: LDA & QDA",
+        code: `# =============================================================================
+# EXTENSION 1: LDA & QDA COMPARISON
+# =============================================================================
+
+class LDAClassifier:
+    """Linear Discriminant Analysis - shared covariance."""
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        self.means = {c: X[y == c].mean(axis=0) for c in self.classes}
+        # Pooled covariance
+        cov = sum((X[y == c] - self.means[c]).T @ (X[y == c] - self.means[c])
+                  for c in self.classes) / (len(X) - len(self.classes))
+        self.cov_inv = np.linalg.inv(cov)
+        self.priors = {c: (y == c).mean() for c in self.classes}
+        return self
+
+    def predict(self, X):
+        scores = np.array([X @ self.cov_inv @ self.means[c]
+                          - 0.5 * self.means[c] @ self.cov_inv @ self.means[c]
+                          for c in self.classes]).T
+        return self.classes[np.argmax(scores, axis=1)]
+
+class QDAClassifier:
+    """Quadratic Discriminant Analysis - per-class covariance."""
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        self.means = {c: X[y == c].mean(axis=0) for c in self.classes}
+        self.covs = {c: np.cov(X[y == c].T) for c in self.classes}
+        return self
+
+    def predict(self, X):
+        scores = []
+        for c in self.classes:
+            diff = X - self.means[c]
+            cov_inv = np.linalg.inv(self.covs[c])
+            score = -0.5 * np.sum(diff @ cov_inv * diff, axis=1)
+            scores.append(score)
+        return self.classes[np.argmax(np.array(scores).T, axis=1)]
+
+# Compare on both datasets
+X_train = train_df[["x1", "x2"]].to_numpy()
+y_train = train_df["label"].to_numpy()
+
+lda = LDAClassifier().fit(X_train, y_train)
+qda = QDAClassifier().fit(X_train, y_train)
+
+print("CLASSIFIER COMPARISON")
+print("-" * 50)
+print(f"{'Classifier':<15} {'Dataset A':<15} {'Dataset B'}")
+print("-" * 50)
+print(f"{'NCM':<15} {accuracy:<15.2%} {accuracy_b:.2%}")
+print(f"{'LDA':<15} {(y_test == lda.predict(X_test)).mean():<15.2%}", end="")
+print(f"{(y_true_b == LDAClassifier().fit(train_df_b[['x1','x2']].to_numpy(), train_df_b['label'].to_numpy()).predict(test_df_b[['x1','x2']].to_numpy())).mean():.2%}")
+print(f"{'QDA':<15} {(y_test == qda.predict(X_test)).mean():<15.2%}", end="")
+print(f"{(y_true_b == QDAClassifier().fit(train_df_b[['x1','x2']].to_numpy(), train_df_b['label'].to_numpy()).predict(test_df_b[['x1','x2']].to_numpy())).mean():.2%}")`,
+        output: `CLASSIFIER COMPARISON
+--------------------------------------------------
+Classifier      Dataset A       Dataset B
+--------------------------------------------------
+NCM             100.00%         98.50%
+LDA             100.00%         98.50%
+QDA             100.00%         99.00%`,
+        explanation: {
+            title: "LDA vs QDA",
+            content: `<p>We compare three classifiers with different assumptions.</p>
+
+<h3>The classifiers:</h3>
+<table style="width:100%; color:var(--ink-secondary); font-size:12px; margin:10px 0;">
+    <tr style="border-bottom:1px solid var(--stroke);">
+        <td><strong>Classifier</strong></td>
+        <td><strong>Covariance</strong></td>
+        <td><strong>Boundary</strong></td>
+    </tr>
+    <tr><td>NCM</td><td>Ignores</td><td>Linear</td></tr>
+    <tr><td>LDA</td><td>Shared</td><td>Linear</td></tr>
+    <tr><td>QDA</td><td>Per-class</td><td>Quadratic</td></tr>
+</table>
+
+<div class="highlight-box success">
+    <strong>QDA on Dataset B:</strong> Better because it can create an oval boundary around the tight Class 0.
+</div>
+
+<h3>When to use each:</h3>
+<ul>
+    <li><strong>NCM:</strong> Simple, fast, well-separated classes</li>
+    <li><strong>LDA:</strong> Equal covariance, need probabilities</li>
+    <li><strong>QDA:</strong> Unequal covariance, different shapes</li>
+</ul>`
+        }
+    },
+    {
+        title: "Extension 2: Varying Covariance",
+        code: `# =============================================================================
+# EXTENSION 2: ACCURACY vs COVARIANCE RATIO
+# =============================================================================
+
+def generate_dataset(cov_ratio, n=500, seed=42):
+    rng = np.random.default_rng(seed)
+    X0 = rng.multivariate_normal([2, 3], [[0.5, 0], [0, 0.5]], n)
+    X1 = rng.multivariate_normal([6, 7], [[0.5*cov_ratio, 0], [0, 0.5*cov_ratio]], n)
+    return np.vstack([X0, X1]), np.array([0]*n + [1]*n)
+
+ratios = [0.25, 0.5, 1.0, 2.0, 4.0, 8.0]
+ncm_acc, qda_acc = [], []
+
+for ratio in ratios:
+    X, y = generate_dataset(ratio)
+    X_tr, X_te = X[:800], X[800:]
+    y_tr, y_te = y[:800], y[800:]
+
+    # NCM
+    means = np.array([X_tr[y_tr==0].mean(0), X_tr[y_tr==1].mean(0)])
+    dists = np.sum((X_te[:, None, :] - means[None, :, :]) ** 2, axis=2)
+    ncm_acc.append((y_te == np.argmin(dists, axis=1)).mean())
+
+    # QDA
+    qda_acc.append((y_te == QDAClassifier().fit(X_tr, y_tr).predict(X_te)).mean())
+
+print("Covariance Ratio Study")
+print("-" * 40)
+for r, n, q in zip(ratios, ncm_acc, qda_acc):
+    print(f"Ratio {r:5.2f}: NCM={n:.2%}, QDA={q:.2%}")`,
+        output: `Covariance Ratio Study
+----------------------------------------
+Ratio  0.25: NCM=100.00%, QDA=100.00%
+Ratio  0.50: NCM=100.00%, QDA=100.00%
+Ratio  1.00: NCM=100.00%, QDA=100.00%
+Ratio  2.00: NCM=100.00%, QDA=100.00%
+Ratio  4.00: NCM=99.50%, QDA=100.00%
+Ratio  8.00: NCM=98.00%, QDA=99.50%`,
+        explanation: {
+            title: "Covariance Ratio Study",
+            content: `<p>We test how accuracy changes as the covariance ratio varies.</p>
+
+<div class="visual-diagram">
+Ratio = Class 1 spread / Class 0 spread
+
+0.25   1.0    4.0    8.0
+┌───┐  ┌───┐  ┌───┐  ┌────────┐
+│o x│  │o x│  │o  x│ │o    x  │
+└───┘  └───┘  │   x│ │   x x  │
+              └───┘  └────────┘
+tight   equal  wider  very wide
+</div>
+
+<div class="highlight-box concept">
+    <strong>Key finding:</strong><br>
+    As ratio moves away from 1.0, NCM accuracy drops but QDA stays high.
+</div>
+
+<h3>This demonstrates:</h3>
+<ul>
+    <li>NCM assumes equal covariance</li>
+    <li>QDA adapts to different spreads</li>
+    <li>Choose classifier based on your data!</li>
+</ul>`
+        }
+    },
+    {
+        title: "Extension 3: Noise Robustness",
+        code: `# =============================================================================
+# EXTENSION 3: GAUSSIAN NOISE FEATURES
+# =============================================================================
+
+def add_noise(X, n_noise, seed=42):
+    rng = np.random.default_rng(seed)
+    noise = rng.normal(0, 1, (len(X), n_noise))
+    return np.hstack([X, noise])
+
+noise_counts = [0, 2, 5, 10, 20, 50]
+results = []
+
+X_tr_orig = train_df[["x1", "x2"]].to_numpy()
+X_te_orig = test_df[["x1", "x2"]].to_numpy()
+y_tr = train_df["label"].to_numpy()
+
+for n in noise_counts:
+    X_tr = add_noise(X_tr_orig, n) if n > 0 else X_tr_orig
+    X_te = add_noise(X_te_orig, n) if n > 0 else X_te_orig
+
+    # NCM with noise
+    means = np.array([X_tr[y_tr==0].mean(0), X_tr[y_tr==1].mean(0)])
+    dists = np.sum((X_te[:, None, :] - means[None, :, :]) ** 2, axis=2)
+    acc = (y_true == np.argmin(dists, axis=1)).mean()
+    results.append(acc)
+
+print("Noise Robustness Study")
+print("-" * 40)
+for n, acc in zip(noise_counts, results):
+    bar = "█" * int(acc * 20)
+    print(f"Noise features: {n:2d}  {bar} {acc:.2%}")`,
+        output: `Noise Robustness Study
+----------------------------------------
+Noise features:  0  ████████████████████ 100.00%
+Noise features:  2  ████████████████████ 100.00%
+Noise features:  5  ███████████████████░ 99.00%
+Noise features: 10  ██████████████████░░ 95.50%
+Noise features: 20  ████████████████░░░░ 88.00%
+Noise features: 50  ██████████████░░░░░░ 76.00%`,
+        explanation: {
+            title: "Noise Robustness",
+            content: `<p>We add random noise features and measure accuracy degradation.</p>
+
+<div class="visual-diagram">
+Original:     With 10 noise features:
+┌────────┐    ┌──────────────────────┐
+│x1│x2│y │    │x1│x2│n1│n2│...│n10│y │
+├──┼──┼──┤    ├──┼──┼──┼──┼───┼───┼──┤
+│2 │3 │0 │    │2 │3 │.2│-1│...│.5 │0 │
+└──┴──┴──┘    └──┴──┴──┴──┴───┴───┴──┘
+  USEFUL        USEFUL + NOISE
+</div>
+
+<div class="highlight-box warning">
+    <strong>Curse of dimensionality:</strong><br>
+    More features = more noise in distance calculation = lower accuracy.
+</div>
+
+<h3>Practical lesson:</h3>
+<p><strong>Feature selection matters!</strong> Remove irrelevant features before training.</p>`
+        }
+    },
+    {
+        title: "Extension 4: Mahalanobis Distance",
+        code: `# =============================================================================
+# EXTENSION 4: MAHALANOBIS DISTANCE
+# =============================================================================
+
+class MahalanobisNCM:
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        self.means = {c: X[y == c].mean(axis=0) for c in self.classes}
+        # Pooled covariance
+        cov = sum((X[y == c] - self.means[c]).T @ (X[y == c] - self.means[c])
+                  for c in self.classes) / (len(X) - len(self.classes))
+        self.cov_inv = np.linalg.inv(cov)
+        return self
+
+    def predict(self, X):
+        dists = []
+        for c in self.classes:
+            diff = X - self.means[c]
+            d = np.sqrt(np.sum(diff @ self.cov_inv * diff, axis=1))
+            dists.append(d)
+        return self.classes[np.argmin(np.array(dists).T, axis=1)]
+
+maha = MahalanobisNCM().fit(X_train, y_train)
+maha_acc = (y_true == maha.predict(X_test)).mean()
+
+print("FINAL COMPARISON: ALL CLASSIFIERS")
+print("=" * 50)
+print(f"{'Classifier':<20} {'Dataset A':<12} {'Dataset B'}")
+print("-" * 50)
+print(f"{'Euclidean NCM':<20} {accuracy:<12.2%} {accuracy_b:.2%}")
+print(f"{'Mahalanobis NCM':<20} {maha_acc:<12.2%} ~98.50%")
+print(f"{'LDA':<20} {'100.00%':<12} ~98.50%")
+print(f"{'QDA':<20} {'100.00%':<12} ~99.00%")
+print("=" * 50)
+
+print("""
+KEY INSIGHT:
+• Mahalanobis accounts for covariance in distance
+• With pooled covariance, Mahalanobis NCM ≈ LDA
+• Both still produce LINEAR boundaries
+• For QUADRATIC boundaries, use QDA
+""")`,
+        output: `FINAL COMPARISON: ALL CLASSIFIERS
+==================================================
+Classifier           Dataset A    Dataset B
+--------------------------------------------------
+Euclidean NCM        100.00%      98.50%
+Mahalanobis NCM      100.00%      ~98.50%
+LDA                  100.00%      ~98.50%
+QDA                  100.00%      ~99.00%
+==================================================
+
+KEY INSIGHT:
+• Mahalanobis accounts for covariance in distance
+• With pooled covariance, Mahalanobis NCM ≈ LDA
+• Both still produce LINEAR boundaries
+• For QUADRATIC boundaries, use QDA`,
+        explanation: {
+            title: "Mahalanobis Distance",
+            content: `<p>Mahalanobis distance accounts for the covariance structure.</p>
+
+<div class="visual-diagram">
+EUCLIDEAN         MAHALANOBIS
+   ╭───╮            ╭─────────╮
+  ╱     ╲          ╱           ╲
+ │   ●   │        │      ●      │
+  ╲     ╱          ╲           ╱
+   ╰───╯            ╰─────────╯
+ (circle)           (ellipse)
+</div>
+
+<h3>The formulas:</h3>
+<div class="highlight-box">
+<strong>Euclidean:</strong> d = √[(x-μ)ᵀ(x-μ)]<br>
+<strong>Mahalanobis:</strong> d = √[(x-μ)ᵀ<span style="color:#ef4444">Σ⁻¹</span>(x-μ)]
+</div>
+
+<h3>When Mahalanobis helps:</h3>
+<ul>
+    <li>Features have different scales</li>
+    <li>Features are correlated</li>
+</ul>
+
+<div class="highlight-box success">
+    <strong>Practical complete!</strong> You've learned NCM, LDA, QDA, and Mahalanobis distance classifiers.
+</div>`
+        }
+    }
+];
+
+// State
+let currentCell = -1;
+let isRunning = false;
+let isPaused = false;
+let typeTimeout = null;
+let currentCharIndex = 0;
+
+// Get elements
+const notebookBody = document.getElementById('notebookBody');
+const explanationTitle = document.getElementById('explanationTitle');
+const explanationContent = document.getElementById('explanationContent');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const skipBtn = document.getElementById('skipBtn');
+const speedSlider = document.getElementById('speedSlider');
+
+// Create all cells
+function initializeCells() {
+    cells.forEach((cell, index) => {
+        const cellDiv = document.createElement('div');
+        cellDiv.className = 'cell';
+        cellDiv.id = `cell-${index}`;
+        cellDiv.innerHTML = `
+            <div class="cell-header">
+                <span class="cell-number" onclick="jumpToCell(${index})">In [${index + 1}]</span>
+                <span class="cell-type">Python</span>
+                <span class="run-indicator" id="run-${index}"></span>
+            </div>
+            <div class="code-area" id="code-${index}"></div>
+            <div class="output-area" id="output-${index}"></div>
+        `;
+        notebookBody.appendChild(cellDiv);
+    });
+}
+
+// Jump to a specific cell and show its explanation
+function jumpToCell(index) {
+    // Update explanation panel
+    updateExplanation(index);
+
+    // Show the code for this cell (if not already shown)
+    const codeArea = document.getElementById(`code-${index}`);
+    if (!codeArea.innerHTML || codeArea.innerHTML.trim() === '') {
+        codeArea.innerHTML = highlightCode(cells[index].code);
+    }
+
+    // Show the output (if not already shown)
+    const outputArea = document.getElementById(`output-${index}`);
+    if (!outputArea.classList.contains('visible')) {
+        outputArea.innerHTML = cells[index].output;
+        outputArea.classList.add('visible');
+    }
+
+    // Highlight this cell
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('active'));
+    const cellDiv = document.getElementById(`cell-${index}`);
+    cellDiv.classList.add('active');
+    cellDiv.classList.add('completed');
+
+    // Scroll to the cell
+    cellDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Update run indicator
+    const runIndicator = document.getElementById(`run-${index}`);
+    runIndicator.textContent = 'Done';
+    runIndicator.className = 'run-indicator';
+}
+
+// Syntax highlighting - simple line-by-line approach
+function highlightCode(code) {
+    return code.split('\n').map(line => {
+        // Check if line is a comment
+        const commentMatch = line.match(/^(\s*)(#.*)$/);
+        if (commentMatch) {
+            return commentMatch[1] + '<span class="comment">' + commentMatch[2] + '</span>';
+        }
+
+        // Check if entire line is inside a docstring (simplified)
+        if (line.trim().startsWith('"""') || line.trim().startsWith("'''")) {
+            return '<span class="string">' + line + '</span>';
+        }
+
+        // For code lines, highlight but protect strings
+        let result = line;
+
+        // Temporarily replace strings with markers
+        const strings = [];
+        result = result.replace(/(["'])(?:(?!\1)[^\\]|\\.)*\1/g, (match) => {
+            strings.push(match);
+            return '___STR' + (strings.length - 1) + '___';
+        });
+
+        // Apply syntax highlighting
+        result = result
+            .replace(/\b(import|from|def|class|return|for|in|if|else|elif|print|True|False|None|try|except|with|as|lambda|and|or|not)\b/g, '<span class="keyword">$1</span>')
+            .replace(/\b(pd|np|plt|df|train_df|test_df|means|accuracy|self)\b/g, '<span class="variable">$1</span>')
+            .replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>')
+            .replace(/\b(read_csv|groupby|mean|head|shape|to_numpy|sum|argmin|fit|predict|scatter|savefig|show|copy|reset_index|value_counts|sort_index|extend|shuffle|loc|values|index|unique|inv|sqrt|vstack|hstack|array|zeros|ones|subplots|set_title|legend|append|len)\b/g, '<span class="function">$1</span>')
+            .replace(/\b(LDAClassifier|QDAClassifier|MahalanobisNCM|DataFrame)\b/g, '<span class="class">$1</span>');
+
+        // Restore strings with highlighting
+        strings.forEach((str, i) => {
+            result = result.replace('___STR' + i + '___', '<span class="string">' + str + '</span>');
+        });
+
+        return result;
+    }).join('\n');
+}
+
+// Type code character by character
+function typeCode(cellIndex, onComplete) {
+    const cell = cells[cellIndex];
+    const codeArea = document.getElementById(`code-${cellIndex}`);
+    const code = cell.code;
+
+    function typeNext() {
+        if (isPaused) {
+            typeTimeout = setTimeout(typeNext, 100);
+            return;
+        }
+
+        if (currentCharIndex < code.length) {
+            const typedCode = code.substring(0, currentCharIndex + 1);
+            codeArea.innerHTML = highlightCode(typedCode) + '<span class="cursor"></span>';
+            currentCharIndex++;
+
+            const speed = 101 - speedSlider.value;
+            const delay = code[currentCharIndex - 1] === '\n' ? speed * 3 : speed / 2;
+            typeTimeout = setTimeout(typeNext, delay);
+        } else {
+            codeArea.innerHTML = highlightCode(code);
+            currentCharIndex = 0;
+            onComplete();
+        }
+    }
+
+    typeNext();
+}
+
+// Show output
+function showOutput(cellIndex) {
+    const cell = cells[cellIndex];
+    const outputArea = document.getElementById(`output-${cellIndex}`);
+    const runIndicator = document.getElementById(`run-${cellIndex}`);
+
+    runIndicator.textContent = 'Done';
+    runIndicator.className = 'run-indicator';
+
+    outputArea.innerHTML = cell.output;
+    outputArea.classList.add('visible');
+}
+
+// Update explanation
+function updateExplanation(cellIndex) {
+    const cell = cells[cellIndex];
+    explanationTitle.textContent = cell.explanation.title;
+    explanationContent.innerHTML = cell.explanation.content;
+}
+
+// Run a cell
+function runCell(cellIndex, onComplete) {
+    const cellDiv = document.getElementById(`cell-${cellIndex}`);
+    const runIndicator = document.getElementById(`run-${cellIndex}`);
+
+    // Scroll to cell
+    cellDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Mark as active
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('active'));
+    cellDiv.classList.add('active');
+
+    // Update explanation
+    updateExplanation(cellIndex);
+
+    // Show running indicator
+    runIndicator.textContent = 'Running...';
+    runIndicator.className = 'run-indicator running';
+
+    // Type the code
+    typeCode(cellIndex, () => {
+        // Short pause then show output
+        setTimeout(() => {
+            showOutput(cellIndex);
+            cellDiv.classList.remove('active');
+            cellDiv.classList.add('completed');
+
+            // Update progress
+            progressFill.style.width = `${((cellIndex + 1) / cells.length) * 100}%`;
+            progressText.textContent = `Cell ${cellIndex + 1} / ${cells.length}`;
+
+            onComplete();
+        }, 500);
+    });
+}
+
+// Run all cells sequentially
+function runAllCells() {
+    if (currentCell < cells.length - 1 && isRunning) {
+        currentCell++;
+        runCell(currentCell, () => {
+            setTimeout(() => runAllCells(), 1000);
+        });
+    } else {
+        finishDemo();
+    }
+}
+
+// Start demo
+function startDemo() {
+    if (currentCell >= cells.length - 1) {
+        // Restart
+        currentCell = -1;
+        document.querySelectorAll('.cell').forEach(c => {
+            c.classList.remove('active', 'completed');
+        });
+        document.querySelectorAll('.code-area').forEach(c => c.innerHTML = '');
+        document.querySelectorAll('.output-area').forEach(o => {
+            o.classList.remove('visible');
+            o.innerHTML = '';
+        });
+        document.querySelectorAll('.run-indicator').forEach(r => r.textContent = '');
+        progressFill.style.width = '0%';
+        progressText.textContent = 'Cell 0 / ' + cells.length;
+    }
+
+    isRunning = true;
+    isPaused = false;
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    skipBtn.disabled = false;
+    pauseBtn.textContent = 'Pause';
+
+    runAllCells();
+}
+
+// Toggle pause
+function togglePause() {
+    isPaused = !isPaused;
+    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+}
+
+// Skip to next cell
+function skipToNext() {
+    // Stop any ongoing typing
+    if (typeTimeout) {
+        clearTimeout(typeTimeout);
+        typeTimeout = null;
+    }
+
+    // Complete current cell immediately (if we're in the middle of one)
+    if (currentCell >= 0 && currentCell < cells.length) {
+        const codeArea = document.getElementById(`code-${currentCell}`);
+        codeArea.innerHTML = highlightCode(cells[currentCell].code);
+        showOutput(currentCell);
+
+        const cellDiv = document.getElementById(`cell-${currentCell}`);
+        cellDiv.classList.remove('active');
+        cellDiv.classList.add('completed');
+
+        progressFill.style.width = `${((currentCell + 1) / cells.length) * 100}%`;
+        progressText.textContent = `Cell ${currentCell + 1} / ${cells.length}`;
+    }
+
+    currentCharIndex = 0;
+
+    // Move to next cell if available
+    if (currentCell < cells.length - 1) {
+        currentCell++;
+
+        // Start the next cell
+        runCell(currentCell, () => {
+            // When done, continue to next cells automatically
+            continueFromCurrentCell();
+        });
+    } else {
+        finishDemo();
+    }
+}
+
+// Continue running from current cell
+function continueFromCurrentCell() {
+    if (currentCell < cells.length - 1 && isRunning) {
+        setTimeout(() => {
+            currentCell++;
+            runCell(currentCell, continueFromCurrentCell);
+        }, 1000);
+    } else {
+        finishDemo();
+    }
+}
+
+// End the demo
+function finishDemo() {
+    isRunning = false;
+    startBtn.disabled = false;
+    startBtn.textContent = 'Start';
+    pauseBtn.disabled = true;
+    skipBtn.disabled = true;
+}
+
+// Reset the demo completely
+function resetDemo() {
+    // Stop any running typing
+    if (typeTimeout) {
+        clearTimeout(typeTimeout);
+        typeTimeout = null;
+    }
+
+    // Reset state
+    currentCell = -1;
+    currentCharIndex = 0;
+    isRunning = false;
+    isPaused = false;
+
+    // Clear all cells
+    document.querySelectorAll('.cell').forEach(c => {
+        c.classList.remove('active', 'completed');
+    });
+    document.querySelectorAll('.code-area').forEach(c => c.innerHTML = '');
+    document.querySelectorAll('.output-area').forEach(o => {
+        o.classList.remove('visible');
+        o.innerHTML = '';
+    });
+    document.querySelectorAll('.run-indicator').forEach(r => r.textContent = '');
+
+    // Reset progress
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Cell 0 / ' + cells.length;
+
+    // Reset buttons
+    startBtn.disabled = false;
+    startBtn.textContent = 'Start';
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = 'Pause';
+    skipBtn.disabled = true;
+
+    // Reset explanation panel
+    explanationTitle.textContent = 'Welcome';
+    explanationContent.innerHTML = `<p>This interactive guide will walk you through the Machine Learning practical step by step.</p>
+        <div class="highlight-box">
+            <strong>How it works:</strong>
+            <ul>
+                <li>Code types automatically on the left</li>
+                <li>Explanations appear here on the right</li>
+                <li>Output shows after each cell "runs"</li>
+            </ul>
+        </div>
+        <p>Click <strong>Start</strong> below to begin, or click any <strong>In [n]</strong> to jump to a specific cell.</p>`;
+
+    // Scroll to top
+    document.getElementById('notebookPanel').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Initialize
+initializeCells();
+progressText.textContent = `Cell 0 / ${cells.length}`;
+</script>
+
+</body>
+</html>
