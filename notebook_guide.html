@@ -484,6 +484,135 @@
             color: #86efac;
         }
 
+        /* Mobile Bottom Sheet */
+        .bottom-sheet-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .bottom-sheet-backdrop.visible {
+            opacity: 1;
+        }
+
+        .bottom-sheet {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 85vh;
+            background: var(--bg-surface);
+            border-radius: 20px 20px 0 0;
+            z-index: 201;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            overflow: hidden;
+        }
+        .bottom-sheet.visible {
+            transform: translateY(0);
+        }
+
+        .bottom-sheet-handle {
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            cursor: grab;
+        }
+        .bottom-sheet-handle::before {
+            content: '';
+            width: 36px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .bottom-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px 16px;
+            border-bottom: 1px solid var(--stroke);
+        }
+        .bottom-sheet-title {
+            color: var(--accent);
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .bottom-sheet-close {
+            background: var(--bg-elevated);
+            border: 1px solid var(--stroke);
+            color: var(--ink-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+        }
+        .bottom-sheet-close:hover {
+            background: var(--panel-hover);
+            color: var(--ink);
+        }
+
+        .bottom-sheet-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(85vh - 100px);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Floating Action Button */
+        .fab-button {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            background: var(--accent);
+            border: none;
+            border-radius: 50%;
+            color: #052e16;
+            cursor: pointer;
+            z-index: 150;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+            transition: all 0.2s ease;
+            align-items: center;
+            justify-content: center;
+        }
+        .fab-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 28px rgba(34, 197, 94, 0.5);
+        }
+        .fab-button:active {
+            transform: scale(0.95);
+        }
+        .fab-button svg {
+            width: 24px;
+            height: 24px;
+        }
+        .fab-button.has-update {
+            animation: fab-pulse 2s ease-in-out infinite;
+        }
+        @keyframes fab-pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 4px 30px rgba(34, 197, 94, 0.7); }
+        }
+
+        /* Old toggle - keep for backwards compat but hide */
+        .explanation-toggle {
+            display: none;
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .explanation-panel {
@@ -494,21 +623,155 @@
             }
         }
 
+        /* Tablet */
         @media (max-width: 900px) {
+            body {
+                overflow: auto;
+                height: auto;
+                min-height: 100dvh;
+            }
             .container {
                 flex-direction: column;
+                height: auto;
+                min-height: 100dvh;
+            }
+            .notebook-panel {
+                flex: none;
+                height: auto;
+                min-height: 50dvh;
+                padding-bottom: 120px;
             }
             .explanation-panel {
                 width: 100%;
-                height: 35vh;
+                height: auto;
+                min-height: 40dvh;
                 border-left: none;
                 border-top: 1px solid var(--stroke);
-            }
-            .notebook-panel {
-                height: 65vh;
+                padding-bottom: 120px;
             }
             .control-bar {
                 right: 0;
+                padding: 14px 16px;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            body {
+                font-size: 14px;
+            }
+            .notebook-panel {
+                padding: 12px;
+                padding-bottom: 100px;
+                min-height: auto;
+                height: auto;
+            }
+            /* Hide inline explanation panel on mobile */
+            .explanation-panel {
+                display: none !important;
+            }
+            .container {
+                flex-direction: column;
+                min-height: auto;
+            }
+            .notebook-header {
+                padding: 10px 14px;
+            }
+            .notebook-title {
+                font-size: 11px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .notebook-body {
+                padding: 10px;
+            }
+            .cell {
+                margin: 10px 0;
+            }
+            .cell-header {
+                padding: 8px 10px;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .cell-number {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            .cell-type {
+                font-size: 11px;
+            }
+            .code-area {
+                padding: 12px;
+                font-size: 11px;
+                line-height: 1.5;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .output-area {
+                padding: 12px;
+                font-size: 11px;
+            }
+            .highlight-box {
+                padding: 12px 14px;
+            }
+            .visual-diagram {
+                font-size: 10px;
+                padding: 12px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .control-bar {
+                padding: 12px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .control-btn {
+                padding: 10px 14px;
+                font-size: 12px;
+                min-height: 44px; /* Touch target */
+            }
+            .progress-bar {
+                order: 10;
+                width: 100%;
+                flex: none;
+                margin-top: 4px;
+            }
+            .progress-text {
+                font-size: 11px;
+                min-width: auto;
+            }
+            .speed-control {
+                display: none; /* Hide on mobile to save space */
+            }
+            /* Show FAB and bottom sheet on mobile */
+            .fab-button {
+                display: flex;
+            }
+            .bottom-sheet-backdrop,
+            .bottom-sheet {
+                display: block;
+            }
+            /* Bottom sheet content styles */
+            .bottom-sheet .explanation-content {
+                font-size: 13px;
+            }
+            .bottom-sheet .explanation-content code {
+                font-size: 11px;
+            }
+            .bottom-sheet .visual-diagram {
+                font-size: 10px;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 380px) {
+            .control-btn {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+            .notebook-title {
+                display: none;
             }
         }
     </style>
@@ -529,10 +792,43 @@
         </div>
     </div>
 
-    <!-- Explanation Panel -->
-    <div class="explanation-panel">
+    <!-- Explanation Panel (desktop only) -->
+    <div class="explanation-panel" id="explanationPanel">
         <h2 id="explanationTitle">Welcome</h2>
         <div class="explanation-content" id="explanationContent">
+            <p>This interactive guide will walk you through the Machine Learning practical step by step.</p>
+            <div class="highlight-box">
+                <strong>How it works:</strong>
+                <ul>
+                    <li>Code types automatically on the left</li>
+                    <li>Explanations appear here on the right</li>
+                    <li>Output shows after each cell "runs"</li>
+                </ul>
+            </div>
+            <p>Click <strong>Start</strong> below to begin, or use the speed slider to adjust typing speed.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile FAB Button -->
+<button class="fab-button" id="fabButton" onclick="openBottomSheet()" aria-label="Show explanation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 16v-4"></path>
+        <path d="M12 8h.01"></path>
+    </svg>
+</button>
+
+<!-- Mobile Bottom Sheet -->
+<div class="bottom-sheet-backdrop" id="bottomSheetBackdrop" onclick="closeBottomSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-header">
+        <h3 class="bottom-sheet-title" id="bottomSheetTitle">Welcome</h3>
+        <button class="bottom-sheet-close" onclick="closeBottomSheet()" aria-label="Close">×</button>
+    </div>
+    <div class="bottom-sheet-content">
+        <div class="explanation-content" id="bottomSheetContent">
             <p>This interactive guide will walk you through the Machine Learning practical step by step.</p>
             <div class="highlight-box">
                 <strong>How it works:</strong>
@@ -1620,6 +1916,8 @@ function updateExplanation(cellIndex) {
     const cell = cells[cellIndex];
     explanationTitle.textContent = cell.explanation.title;
     explanationContent.innerHTML = cell.explanation.content;
+    // Also update mobile bottom sheet
+    updateBottomSheet(cell.explanation.title, cell.explanation.content);
 }
 
 // Run a cell
@@ -1800,8 +2098,7 @@ function resetDemo() {
     skipBtn.disabled = true;
 
     // Reset explanation panel
-    explanationTitle.textContent = 'Welcome';
-    explanationContent.innerHTML = `<p>This interactive guide will walk you through the Machine Learning practical step by step.</p>
+    const welcomeContent = `<p>This interactive guide will walk you through the Machine Learning practical step by step.</p>
         <div class="highlight-box">
             <strong>How it works:</strong>
             <ul>
@@ -1811,9 +2108,51 @@ function resetDemo() {
             </ul>
         </div>
         <p>Click <strong>Start</strong> below to begin, or click any <strong>In [n]</strong> to jump to a specific cell.</p>`;
+    explanationTitle.textContent = 'Welcome';
+    explanationContent.innerHTML = welcomeContent;
+    // Also reset mobile bottom sheet
+    updateBottomSheet('Welcome', welcomeContent);
+    const fab = document.getElementById('fabButton');
+    if (fab) fab.classList.remove('has-update');
 
     // Scroll to top
     document.getElementById('notebookPanel').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Bottom sheet functions for mobile
+function openBottomSheet() {
+    const backdrop = document.getElementById('bottomSheetBackdrop');
+    const sheet = document.getElementById('bottomSheet');
+    const fab = document.getElementById('fabButton');
+
+    backdrop.classList.add('visible');
+    sheet.classList.add('visible');
+    fab.classList.remove('has-update');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBottomSheet() {
+    const backdrop = document.getElementById('bottomSheetBackdrop');
+    const sheet = document.getElementById('bottomSheet');
+
+    backdrop.classList.remove('visible');
+    sheet.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+// Sync bottom sheet content with explanation panel (content is trusted, from hardcoded cells array)
+function updateBottomSheet(title, content) {
+    const sheetTitle = document.getElementById('bottomSheetTitle');
+    const sheetContent = document.getElementById('bottomSheetContent');
+    const fab = document.getElementById('fabButton');
+
+    if (sheetTitle) sheetTitle.textContent = title;
+    if (sheetContent) sheetContent.innerHTML = content; // Safe: content from trusted cells array
+
+    // Pulse the FAB to indicate new content
+    if (fab && !document.getElementById('bottomSheet').classList.contains('visible')) {
+        fab.classList.add('has-update');
+    }
 }
 
 // Initialize
