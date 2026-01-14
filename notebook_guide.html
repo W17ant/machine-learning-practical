@@ -493,10 +493,12 @@
             backdrop-filter: blur(4px);
             z-index: 200;
             opacity: 0;
+            pointer-events: none;
             transition: opacity 0.3s ease;
         }
         .bottom-sheet-backdrop.visible {
             opacity: 1;
+            pointer-events: auto;
         }
 
         .bottom-sheet {
@@ -510,11 +512,13 @@
             border-radius: 20px 20px 0 0;
             z-index: 201;
             transform: translateY(100%);
+            pointer-events: none;
             transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
             overflow: hidden;
         }
         .bottom-sheet.visible {
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .bottom-sheet-handle {
